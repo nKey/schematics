@@ -198,6 +198,40 @@ class StringType(BaseType):
         return value
 
 
+class URLType(StringType):
+    """A field that validates input as an URL.
+
+    If verify_exists=True is passed the validate function will make sure
+    the URL makes a valid connection.
+    """
+
+    URL_REGEX = re.compile(
+        r'^https?://'
+        r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,6}\.?|'
+        r'localhost|'
+        r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'
+        r'(?::\d+)?'
+        r'(?:/?|[/?]\S+)$', re.IGNORECASE
+    )
+
+    def __init__(self, verify_exists=False, **kwargs):
+        self.verify_exists = verify_exists
+        super(URLType, self).__init__(**kwargs)
+
+    def convert(self, value):
+        if (not isinstance(value, basestring) or
+            not URLType.URL_REGEX.match(value)):
+            raise ValidationError('Invalid URL')
+        if self.verify_exists:
+            import urllib2
+            try:
+                request = urllib2.Request(value)
+                urllib2.urlopen(request)
+            except Exception:
+                raise ValidationError('URL does not exist')
+        return value
+
+
 class EmailType(StringType):
     """A field that validates input as an E-Mail-Address.
     """
