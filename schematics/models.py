@@ -103,6 +103,10 @@ class ModelMeta(type):
     def fields(cls):
         return cls._unbound_fields
 
+    @property
+    def required_fields(cls):
+        return {name: f for name, f in cls.fields.items() if f.required}
+
     def __iter__(self):
         return itertools.chain(
             self._unbound_fields.iteritems(),
