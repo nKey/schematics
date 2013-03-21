@@ -78,16 +78,9 @@ class ModelType(MultiType):
                 self.model_class.__name__,
                 type(value).__name__))
 
-        errors = {}
-        result = {}
-        for name, field in self.fields.iteritems():
-            try:
-                result[name] = field.validate(value.get(name))
-            except ValidationError, e:
-                errors[name] = e
-        if errors:
-            raise ValidationError(errors)
-        return self.model_class(result)
+        # We don't allow partial submodels because that is just complex and
+        # not obviously useful
+        return self.model_class(value, partial=False)
 
     def to_primitive(self, model_instance, include_serializables=True):
         primitive_data = {}
@@ -95,11 +88,10 @@ class ModelType(MultiType):
             serialized_name = field.serialized_name or field_name
 
             if value is None:
-                primitive_value = None
+                if field.serialize_when_none:
+                    primitive_data[serialized_name] = None
             else:
-                primitive_value = field.to_primitive(value)
-
-            primitive_data[serialized_name] = primitive_value
+                primitive_data[serialized_name] = field.to_primitive(value)
 
         return primitive_data
 
@@ -120,12 +112,13 @@ class ModelType(MultiType):
             if gottago(field_name, value):
                 primitive_data.pop(serialized_name)
             elif isinstance(field, MultiType):
-                primitive_value = primitive_data[serialized_name]
-                field.filter_by_role(
-                    value,
-                    primitive_value,
-                    role
-                )
+                primitive_value = primitive_data.get(serialized_name, None)
+                if primitive_value:
+                    field.filter_by_role(
+                        value,
+                        primitive_value,
+                        role
+                    )
 
         return primitive_data
 
