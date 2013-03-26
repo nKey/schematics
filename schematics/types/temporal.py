@@ -28,10 +28,10 @@ class TimeStampType(DateTimeType):
         if isinstance(value, datetime.datetime):
             return value
         try:
-            value = TimeStampType.timestamp_to_date(float(value))
+            return TimeStampType.timestamp_to_date(float(value))
         except (TypeError, ValueError):
             pass
-        super(TimeStampType, self).convert(value)
+        return super(TimeStampType, self).convert(value)
 
     @classmethod
     def timestamp_to_date(cls, value):
@@ -44,5 +44,4 @@ class TimeStampType(DateTimeType):
         return int(round(mktime(value.astimezone(tzutc()).timetuple())))
 
     def to_primitive(self, value):
-        v = TimeStampType.date_to_timestamp(value)
-        return v
+        return TimeStampType.date_to_timestamp(value)
