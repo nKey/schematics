@@ -193,7 +193,7 @@ class ListType(MultiType):
                 errors['index_%s' % idx] = e
 
         if errors:
-            raise ValidationError(sorted(errors.items()))
+            raise ValidationError(errors)
 
         return result
 
