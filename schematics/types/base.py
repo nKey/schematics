@@ -394,8 +394,8 @@ class BooleanType(BaseType):
             elif value in BooleanType.FALSE:
                 value = False
             else:
-                raise ValueError(u'Invalid boolean value')
-        return value
+                raise ValidationError(u'Invalid boolean value')
+        return bool(value)
 
 
 class DateType(BaseType):
