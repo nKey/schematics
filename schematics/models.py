@@ -116,6 +116,13 @@ class ModelMeta(type):
 
         return options_class(cls, **options_members)
 
+    def _append_field(cls, field_name, field):
+        field.owner_model = cls
+        field_descriptor = FieldDescriptor(field_name)
+        setattr(cls, field_name, field_descriptor)
+        cls._unbound_fields[field_name] = field
+        return field_descriptor
+
     @property
     def fields(cls):
         return cls._unbound_fields
