@@ -325,7 +325,7 @@ class NumberType(BaseType):
     def convert(self, value):
         try:
             value = self.number_class(value)
-        except ValueError, e:
+        except (ValueError, TypeError):
             raise ValidationError(self.messages['number_coerce']
                 .format(self.number_type))
 
