@@ -1,3 +1,4 @@
+# encoding=utf-8
 
 import unittest
 
@@ -528,3 +529,27 @@ class TestRoles(unittest.TestCase):
                 },
             ]
         })
+
+    def test_instance_role(self):
+        class Player(Model):
+            id = StringType()
+            name = StringType()
+
+            class Options:
+                roles = {
+                    "public": whitelist("id", "name")
+                }
+
+        p1 = Player(dict(id="1", name="Player1"))
+        p2 = Player(dict(id="2", name="Player2"))
+        p2._options = Player._options._copy()
+        p2._options.roles["filtered"] = whitelist("name")
+
+        with self.assertRaises(ValueError):
+            p1.serialize(role="filtered")
+
+        d = p2.serialize(role="filtered")
+
+        self.assertEqual(d, {
+            "name": "Player2"
+            })
