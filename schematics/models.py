@@ -47,6 +47,9 @@ class ModelOptions(object):
         self.namespace = namespace
         self.roles = roles or {}
 
+    def _copy(self):
+        return ModelOptions(self.klass, self.namespace, self.roles.copy())
+
 
 class ModelMeta(type):
     """Meta class for Models. Handles model inheritance and Options.
