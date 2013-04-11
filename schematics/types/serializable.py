@@ -56,6 +56,7 @@ class Serializable(object):
     def __set__(self, obj, value):
         if self.fset is None:
             raise AttributeError("can't set attribute")
+        value = self.type(value)
         self.fset(obj, value)
 
     def setter(self, fset):
