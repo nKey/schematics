@@ -262,13 +262,8 @@ class Model(object):
                 for field_name in rogues_found:
                     errors[field_name] = [u'%s is an illegal field.' % field_name]
 
-        if errors:
-            self.errors = errors
-            if raises:
-                raise ValidationError(errors)
-            return False
-
         # Set internal data and touch the TypeDescriptors by setattr
+        rollback = self._data.copy()
         self._data.update(**data)
         data.update(**self._data)
 
@@ -279,6 +274,25 @@ class Model(object):
             data.setdefault(field_name, default)
 
             self._data[field_name] = data.get(field_name)
+
+        # Set and validate serializable fields
+        # Checked after internal data is set since the serializable
+        # setter functions may require access to other fields.
+        for field_name, serializable in self._serializables.iteritems():
+            serialized_field_name = field.serialized_name or field_name
+            if serializable.fset and serialized_field_name in input_data:
+                field_value = input_data.get(serialized_field_name)
+                try:
+                    setattr(self, field_name, field_value)
+                except ValidationError, e:
+                    errors[serialized_field_name] = e.messages
+
+        if errors:
+            self.errors = errors
+            self._data = rollback
+            if raises:
+                raise ValidationError(errors)
+            return False
 
         return True
 

@@ -7,6 +7,7 @@ from schematics.models import Model
 from schematics.exceptions import ValidationError
 from schematics.types import StringType, DateTimeType, BooleanType
 from schematics.types.compound import ModelType, ListType
+from schematics.types.serializable import serializable
 
 
 class TestChoices(unittest.TestCase):
@@ -338,6 +339,34 @@ class TestErrors(unittest.TestCase):
             id(new_school.courses[0].attending[0]),
             id(school.courses[0].attending[0])
         )
+
+    def test_merge_serializable_errors(self):
+        now = datetime.datetime(2012, 1, 1, 0, 0)
+        past = now - datetime.timedelta(365)
+
+        class Person(Model):
+            name = StringType(required=True)
+            birthday = DateTimeType()
+
+            @serializable
+            def age(self):
+                return (now - self.birthday).days / 365
+
+            @age.setter
+            def age(self, value):
+                if value < 0:
+                    raise ValidationError(u'Negative age is not valid')
+                self.birthday = now - datetime.timedelta(value * 365)
+
+        person = Person()
+        is_valid = person.validate({
+            "age": -1
+        }, raises=False)
+
+        self.assertFalse(is_valid)
+
+        self.assertIn("age", person.errors)
+        self.assertIn("name", person.errors)
 
 
 if __name__ == '__main__':
