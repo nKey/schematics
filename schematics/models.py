@@ -301,6 +301,9 @@ class Model(object):
                 except ValidationError, e:
                     errors[serialized_field_name] = e.messages
 
+        # Model validation hook
+        self.validate_model(errors)
+
         if errors:
             self.errors = errors
             self._data = rollback
@@ -309,6 +312,9 @@ class Model(object):
             return False
 
         return True
+
+    def validate_model(self, errors):
+        pass
 
     def __iter__(self):
         return self.iter()
