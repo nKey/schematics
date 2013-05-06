@@ -273,7 +273,7 @@ class Model(object):
         return errors
 
     def __iter__(self):
-        return self.iter()
+        return ((field_name, value) for field_name, field, value in self.iter())
 
     def iter(self, include_serializables=True):
         if include_serializables:
