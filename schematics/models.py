@@ -20,13 +20,18 @@ class FieldDescriptor(object):
         try:
             if model is None:
                 return type.fields[self.name]
-            return model._data[self.name]
+            if self.name in model._raw_data:
+                return model._raw_data[self.name]
+            elif self.name in model._data:
+                return model._data[self.name]
+            else:
+                return model._fields[self.name].default
         except KeyError:
             raise AttributeError(self.name)
 
     def __set__(self, model, value):
         field = model._fields[self.name]
-        model._data[self.name] = field(value)
+        model._raw_data[self.name] = field(value)
 
     def __delete__(self, model):
         if self.name not in model._fields:
@@ -159,7 +164,8 @@ class Model(object):
 
         self._initial = raw_data
 
-        self._data = self.convert(raw_data)
+        self._raw_data = self.convert(raw_data)
+        self._data = {}
 
     def validate(self, partial=False, strict=False):
         """
@@ -173,7 +179,14 @@ class Model(object):
         :param strict:
             Complain about unrecognized keys. Default: False
         """
-        data, errors = validate(self, self._data, partial=partial, strict=strict)
+        if not self._raw_data:
+            return  # no input data to validate
+
+        data, errors = validate(self, self._raw_data, partial=partial, strict=strict)
+
+        # input data was processed, clear it
+        self._raw_data = {}
+
         if errors:
             raise ModelValidationError(errors)
         # Set internal data and touch the TypeDescriptors by setattr
@@ -236,7 +249,7 @@ class Model(object):
         else:
             all_fields = self._fields.iteritems()
 
-        return ((field_name, field, self[field_name]) for field_name, field in all_fields)
+        return ((field_name, field, self.get(field_name)) for field_name, field in all_fields)
 
     def __getitem__(self, name):
         try:
@@ -247,24 +260,19 @@ class Model(object):
 
     def __setitem__(self, name, value):
         # Ensure that the field exists before settings its value
-        if name not in self._data:
+        if not self.__contains__(name):
             raise KeyError(name)
         return setattr(self, name, value)
 
     def __contains__(self, name):
-        return name in self._data or name in self._serializables
+        return name in self._fields or name in self._serializables
 
     def __len__(self):
         return len(self._data)
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
-            keys = self._fields
-
-            for key in keys:
-                if self[key] != other[key]:
-                    return False
-            return True
+            return self._data == other._data and self._raw_data == other._raw_data
         return False
 
     def __ne__(self, other):
