@@ -21,19 +21,19 @@ class TestFunctionalInterface(unittest.TestCase):
             id = IntType()
             name = StringType()
 
-        p1 = Player({'id': 4})
-        data, errors = validate(Player, {'name': 'Arthur'}, context=p1._data)
+        ctx = {'id': 4}
+        data, errors = validate(Player, {'name': 'Arthur'}, context=ctx)
 
         self.assertFalse(errors)
         self.assertEqual(data, {'id': 4, 'name': 'Arthur'})
-        self.assertNotEqual(data, p1._data)
+        self.assertNotEqual(data, ctx)
 
     def test_validate_override_context_data(self):
         class Player(Model):
             id = IntType()
 
-        p1 = Player({'id': 4})
-        data, errors = validate(Player, {'id': 3}, context=p1._data)
+        ctx = {'id': 4}
+        data, errors = validate(Player, {'id': 3}, context=ctx)
 
         self.assertFalse(errors)
         self.assertEqual(data, {'id': 3})
