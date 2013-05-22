@@ -1,8 +1,9 @@
 
 import unittest
+import hashlib
 
 from schematics.models import Model
-from schematics.types import IntType, StringType
+from schematics.types import IntType, StringType, MD5Type
 from schematics.exceptions import ValidationError
 
 
@@ -51,37 +52,23 @@ class TestDataIntegrity(unittest.TestCase):
         valid format for security purposes during conversion.
 
         """
-        class PasswordType(StringType):
-            def __init__(self, *a, **kw):
-                self.sep = '|||'
-                self.alg = 'dummy'
-                super(PasswordType, self).__init__(*a, **kw)
-
-            def _dummy_hash(self, value):
-                # super secure way to encode a password
-                dummy_hash = str(abs(hash(value)))
-                return self.sep.join((self.alg, dummy_hash))
-
-            def _check_hash(self, value):
-                # validate the password is encoded securely
-                try:
-                    alg, digest = value.split(self.sep)
-                except ValueError:
-                    return False
-                return (alg == self.alg) and digest.isdigit()
-
-            def convert(self, value):
-                # password can come encoded or requiring encoding
-                value = super(PasswordType, self).convert(value)
-                if self.sep in value:
-                    return value  # already encoded, so it is valid
-                self.validate(value)
-                return self._dummy_hash(value)
+        def gen_digest(value):
+            return hashlib.md5(value).hexdigest()
 
         class Player(Model):
-            password = PasswordType(min_length=6, max_length=6)
+            password = StringType(min_length=6, max_length=6)
+            secret = MD5Type()
+
+            transformers = {
+                password: (secret, gen_digest),
+            }
 
         p1 = Player({'password': 'secret'})
-        self.assertNotEqual(p1.password, 'secret')
         p1.validate()
-        self.assertNotIn('secret', p1.serialize()['password'])
+        self.assertNotEqual(p1.password, 'secret')
+        self.assertTrue(p1.secret)
+        self.assertNotIn('secret', p1.serialize().values())
+
+        with self.assertRaises(ValidationError):
+            p2 = Player({'password': 'tiny'})
+            p2.validate()

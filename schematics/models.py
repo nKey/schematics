@@ -183,6 +183,7 @@ class Model(object):
             return  # no input data to validate
 
         data, errors = validate(self, self._raw_data, partial=partial, strict=strict)
+        data.update(self.transform(data))
 
         # input data was processed, clear it
         self._raw_data = {}
@@ -212,6 +213,21 @@ class Model(object):
 
         """
         return flatten(self, role, prefix=prefix)
+
+    transformers = {}
+
+    def transform(self, data):
+        # data = {}
+        for field_name, value in data.iteritems():
+            field = self._fields[field_name]
+            if field not in self.transformers:
+                continue
+            dest_field, transfunc = self.transformers[field]
+            dest_name = [k for k, v in self._fields.iteritems() if v == dest_field][0]
+            value = data[field_name]
+            del data[field_name]
+            data[dest_name] = dest_field(transfunc(value))
+        return data
 
     def convert(self, raw_data):
         """
