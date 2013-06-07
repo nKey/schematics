@@ -21,12 +21,7 @@ class FieldDescriptor(object):
         try:
             if model is None:
                 return type.fields[self.name]
-            if self.name in model._raw_data:
-                return model._raw_data[self.name]
-            elif self.name in model._data:
-                return model._data[self.name]
-            else:
-                return model._fields[self.name].default
+            return model[self.name]
         except KeyError:
             raise AttributeError(self.name)
 
@@ -285,11 +280,17 @@ class Model(object):
         return atoms(self.__class__, self, include_serializables)
 
     def __getitem__(self, name):
-        try:
-            return getattr(self, name)
-        except AttributeError:
-            pass
-        raise KeyError(name)
+        if name in self._raw_data:
+            return self._raw_data[name]
+        elif name in self._data:
+            return self._data[name]
+        elif name in self._fields:
+            return self._fields[name].default
+        else:
+            try:
+                return getattr(self, name)
+            except AttributeError:
+                raise KeyError(name)
 
     def __setitem__(self, name, value):
         # Ensure that the field exists before settings its value
