@@ -27,7 +27,8 @@ def serializable(*args, **kwargs):
         serialized_type = kwargs.pop("type", BaseType())
         serialized_name = kwargs.pop("serialized_name", None)
         serialize_when_none = kwargs.pop("serialize_when_none", True)
-        return Serializable(f, type=serialized_type, serialized_name=serialized_name,
+        return Serializable(f, type=serialized_type,
+            serialized_name=serialized_name,
             serialize_when_none=serialize_when_none)
 
     if len(args) == 1 and callable(args[0]):
@@ -40,14 +41,26 @@ def serializable(*args, **kwargs):
 
 class Serializable(object):
 
-    def __init__(self, f, type=None, serialized_name=None, serialize_when_none=True):
+    def __init__(self, f, fset=None, type=None, serialized_name=None,
+            serialize_when_none=True):
         self.f = f
+        self.fset = fset
         self.type = type
         self.serialized_name = serialized_name
         self.serialize_when_none = serialize_when_none
 
-    def __get__(self, object, owner):
-        return self.f(object)
+    def __get__(self, obj, owner):
+        return self.f(obj)
+
+    def __set__(self, obj, value):
+        if self.fset is None:
+            raise AttributeError("can't set attribute")
+        value = self.type(value)
+        self.fset(obj, value)
+
+    def setter(self, fset):
+        self.fset = fset
+        return self
 
     def to_primitive(self, value):
         return self.type.to_primitive(value)

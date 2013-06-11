@@ -390,6 +390,25 @@ class TestSerializable(unittest.TestCase):
         d = q.serialize('public')
         self.assertEqual(d, {'question_id': '1'})
 
+    def test_serializable_setter(self):
+        class Location(Model):
+            country_code = StringType()
+
+            @serializable
+            def country_name(self):
+                return "United States" if self.country_code == "US" else "Unknown"
+
+            @country_name.setter
+            def country_name(self, value):
+                self.country_code = {"United States": "US"}.get(value)
+
+        location = Location()
+        location.country_name = "United States"
+        self.assertEqual(location.country_code, "US")
+
+        d = location.serialize()
+        self.assertEqual(d, {"country_code": "US", "country_name": "United States"})
+
 
 class TestRoles(unittest.TestCase):
 
