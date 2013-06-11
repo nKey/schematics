@@ -21,22 +21,12 @@ class FieldDescriptor(object):
         try:
             if model is None:
                 return type.fields[self.name]
-            if self.name in model._raw_data:
-                return model._raw_data[self.name]
-            elif self.name in model._data:
-                return model._data[self.name]
-            else:
-                return model._fields[self.name].default
+            return model[self.name]
         except KeyError:
             raise AttributeError(self.name)
 
     def __set__(self, model, value):
-        field = model._fields[self.name]
-        # TODO: read Options class for strict type checking flag
-        #model._raw_data[self.name] = field(value)
-        if not isinstance(value, Model) and isinstance(field, ModelType):
-            value = field.model_class(value)
-        model._raw_data[self.name] = value
+        model[self.name] = value
 
     def __delete__(self, model):
         if self.name not in model._fields:
@@ -285,17 +275,28 @@ class Model(object):
         return atoms(self.__class__, self, include_serializables)
 
     def __getitem__(self, name):
-        try:
-            return getattr(self, name)
-        except AttributeError:
-            pass
-        raise KeyError(name)
+        if name in self._raw_data:
+            return self._raw_data[name]
+        elif name in self._data:
+            return self._data[name]
+        elif name in self._fields:
+            return self._fields[name].default
+        else:
+            try:
+                return getattr(self, name)
+            except AttributeError:
+                raise KeyError(name)
 
     def __setitem__(self, name, value):
-        # Ensure that the field exists before settings its value
+        # Ensure that the field exists before setting its value
         if not self.__contains__(name):
             raise KeyError(name)
-        return setattr(self, name, value)
+        field = self._fields[name]
+        # TODO: read Options class for strict type checking flag
+        #self._raw_data[name] = field(value)
+        if not isinstance(value, Model) and isinstance(field, ModelType):
+            value = field.model_class(value)
+        self._raw_data[name] = value
 
     def __contains__(self, name):
         return name in self._fields or name in self._serializables
