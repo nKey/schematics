@@ -55,6 +55,9 @@ class ModelOptions(object):
         self.roles = roles or {}
         self.serialize_when_none = serialize_when_none
 
+    def _copy(self):
+        return ModelOptions(self.klass, self.namespace, self.roles.copy())
+
 
 class ModelMeta(type):
     """Meta class for Models. Handles model inheritance and Options.

@@ -83,8 +83,8 @@ class ModelType(MultiType):
             return primitive_data
 
         gottago = lambda k, v: False
-        if role in self.model_class._options.roles:
-            gottago = self.model_class._options.roles[role]
+        if role in model_instance._options.roles:
+            gottago = model_instance._options.roles[role]
         elif role and raise_error_on_role:
             raise ValueError(u'%s Model has no role "%s"' % (
                 self.model_class.__name__, role))

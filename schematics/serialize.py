@@ -154,8 +154,8 @@ def apply_shape(cls, instance_or_dict, role, field_converter, model_converter,
     if role in cls._options.roles:
         gottago = cls._options.roles[role]
     elif role and raise_error_on_role:
-        error_msg = u'%s Model has no role "%s"'
-        raise ValueError(error_msg % (cls.__name__, role))
+        error_msg = u'%s has no role "%s"'
+        raise ValueError(error_msg % (cls, role))
 
     ### Transformation loop
     attr_gen = atoms(cls, instance_or_dict, include_serializables)
@@ -204,7 +204,7 @@ def serialize(instance, role, raise_error_on_role=True):
     field_converter = lambda field, value: field.to_primitive(value)
     model_converter = lambda f, v: f.to_primitive(v, raise_error_on_role)
 
-    data = apply_shape(instance.__class__, instance, role, field_converter,
+    data = apply_shape(instance, instance, role, field_converter,
                        model_converter, raise_error_on_role)
     return data
 
@@ -265,7 +265,7 @@ def flatten(instance, role, raise_error_on_role=True, ignore_none=True,
     field_converter = lambda field, value: field.to_primitive(value)
     model_converter = lambda f, v: f.to_primitive(v, include_serializables=i)
 
-    data = apply_shape(instance.__class__, instance, role, field_converter,
+    data = apply_shape(instance, instance, role, field_converter,
                        model_converter,
                        include_serializables=include_serializables)
 
