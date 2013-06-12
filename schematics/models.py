@@ -167,7 +167,7 @@ class Model(object):
     __metaclass__ = ModelMeta
     __optionsclass__ = ModelOptions
 
-    def __init__(self, data=None, partial=True, raises=True):
+    def __init__(self, data=None, partial=True, raises=True, **kw):
         if data is None:
             data = {}
 
