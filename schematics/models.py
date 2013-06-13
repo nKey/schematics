@@ -167,14 +167,16 @@ class Model(object):
         if raw_data is None:
             raw_data = {}
         self._initial = raw_data
-        self._raw_data = self.convert(raw_data)
+        self._raw_data = self.convert(raw_data) if raw_data else {}
         self._data = {}
 
-    def validate(self, partial=False, strict=False):
+    def validate(self, raw_data=None, partial=False, strict=False):
         """
         Validates the state of the model and adding additional untrusted data
         as well. If the models is invalid, raises ValidationError with error messages.
 
+        :param raw_data:
+            A ``dict`` or ``dict``-like structure for incoming data.
         :param partial:
             Allow partial data to validate; useful for PATCH requests.
             Essentially drops the ``required=True`` arguments from field
@@ -182,19 +184,12 @@ class Model(object):
         :param strict:
             Complain about unrecognized keys. Default: False
         """
-        if not self._raw_data:
-            if not partial:
-                # check for empty required fields
-                required = {
-                    field.serialized_name or field_name: [field.messages['required'], ] for
-                    field_name, field, in self._fields.iteritems() if
-                    field.required and self[field_name] is None}
-                if required:
-                    raise ModelValidationError(required)
+        if raw_data:
+            self._raw_data.update(raw_data)
+        if not self._raw_data and partial:
             return  # no input data to validate
         try:
             data = validate(self, self._raw_data, partial=partial, strict=strict, context=self._data)
-            # Set internal data and touch the TypeDescriptors by setattr
             self._data.update(**data)
         except BaseError as e:
             raise ModelValidationError(e.messages)
@@ -283,7 +278,9 @@ class Model(object):
         elif name in self._data:
             return self._data[name]
         elif name in self._fields:
-            return self._fields[name].default
+            default = self._fields[name].default
+            self._raw_data[name] = default
+            return default
         else:
             try:
                 return getattr(self, name)
@@ -305,7 +302,7 @@ class Model(object):
         return name in self._fields or name in self._serializables
 
     def __len__(self):
-        return len(self._data)
+        return len(set(itertools.chain(self._data.iterkeys(), self._raw_data.iterkeys())))
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
