@@ -272,6 +272,21 @@ class Model(object):
     def atoms(self, include_serializables=True):
         return atoms(self.__class__, self, include_serializables)
 
+    def keys(self):
+        return self._fields.keys()
+
+    def items(self):
+        return [(k, self.get(k)) for k in self._fields.iterkeys()]
+
+    def values(self):
+        return [self.get(k) for k in self._fields.iterkeys()]
+
+    def get(self, key, default=None):
+        try:
+            return self[key]
+        except KeyError:
+            return default
+
     def __getitem__(self, name):
         if name in self._raw_data:
             return self._raw_data[name]
@@ -306,17 +321,14 @@ class Model(object):
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
-            return self._data == other._data and self._raw_data == other._raw_data
+            for k in self._fields:
+                if self.get(k) != other.get(k):
+                    return False
+            return True
         return False
 
     def __ne__(self, other):
         return not self == other
-
-    def get(self, key, default=None):
-        try:
-            return self[key]
-        except KeyError:
-            return default
 
     def __repr__(self):
         try:
