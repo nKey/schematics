@@ -57,8 +57,10 @@ def validate(model, raw_data, partial=False, strict=False, context=None):
                 errors[serialized_field_name] = e.messages
 
     if strict:
-        rogue_field_errors = _check_for_unknown_fields(model, data)
-        errors.update(rogue_field_errors)
+        rogues_found = set(data) - set(model._fields)
+        if len(rogues_found) > 0:
+            for field_name in rogues_found:
+                errors[field_name] = [u'%s is an illegal field.' % field_name]
 
     # validate an instance with its own validators
     if hasattr(model, '_data'):
@@ -92,15 +94,6 @@ def _validate_instance(instance, data):
                 serialized_field_name = field.serialized_name or field_name
                 errors[serialized_field_name] = e.messages
                 data.pop(field_name, None)  # get rid of the invalid field
-    return errors
-
-
-def _check_for_unknown_fields(model, data):
-    errors = {}
-    rogues_found = set(data) - set(model._fields)
-    if len(rogues_found) > 0:
-        for field_name in rogues_found:
-            errors[field_name] = [u'%s is an illegal field.' % field_name]
     return errors
 
 
