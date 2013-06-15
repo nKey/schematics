@@ -113,6 +113,10 @@ def _serializable_setters(instance, raw_data):
         if serializable.fset and serialized_field_name in raw_data:
             value = raw_data[serialized_field_name]
             try:
+                value = serializable.type(value)
+                if field_name in instance._validator_functions:
+                    context = dict(instance._data, **raw_data)
+                    instance._validator_functions[field_name](instance, context, value)
                 setattr(instance, field_name, value)
             except BaseError as e:
                 errors[serialized_field_name] = e.messages
