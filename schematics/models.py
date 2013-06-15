@@ -161,11 +161,11 @@ class Model(object):
         return cls(expand(data))
 
     def __init__(self, raw_data=None):
-        if raw_data is None:
-            raw_data = {}
-        self._initial = raw_data
-        self._raw_data = self.convert(raw_data)
+        self._raw_data = {}
         self._data = {}
+        if raw_data:
+            converted = self.convert(raw_data)
+            self._raw_data = dict(raw_data, **converted)
 
     def validate(self, partial=False, strict=False):
         """
@@ -191,8 +191,7 @@ class Model(object):
             return  # no input data to validate
         try:
             data = validate(self, self._raw_data, partial=partial, strict=strict, context=self._data)
-            # Set internal data and touch the TypeDescriptors by setattr
-            self._data.update(**data)
+            self._data.update(data)
         except BaseError as e:
             raise ModelValidationError(e.messages)
         finally:
