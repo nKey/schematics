@@ -28,6 +28,11 @@ def validate(model, raw_data, partial=False, strict=False, context=None):
     data = dict(context) if context is not None else {}
     errors = {}
 
+    # set and validate instance serializable fields
+    if hasattr(model, '_data'):
+        serializable_errors = _serializable_setters(model, raw_data)
+        errors.update(serializable_errors)
+
     # validate raw_data by the model fields
     for field_name, field in model._fields.iteritems():
         serialized_field_name = field.serialized_name or field_name
@@ -52,8 +57,10 @@ def validate(model, raw_data, partial=False, strict=False, context=None):
                 errors[serialized_field_name] = e.messages
 
     if strict:
-        rogue_field_errors = _check_for_unknown_fields(model, data)
-        errors.update(rogue_field_errors)
+        rogues_found = set(data) - set(model._fields)
+        if len(rogues_found) > 0:
+            for field_name in rogues_found:
+                errors[field_name] = [u'%s is an illegal field.' % field_name]
 
     # validate an instance with its own validators
     if hasattr(model, '_data'):
@@ -90,10 +97,27 @@ def _validate_instance(instance, data):
     return errors
 
 
-def _check_for_unknown_fields(model, data):
+def _serializable_setters(instance, raw_data):
+    """
+    Set and validate serializable fields.
+
+    :param raw_data:
+        A dict with the input data.
+
+    :returns:
+        Errors of the setter fields that failed validation.
+    """
     errors = {}
-    rogues_found = set(data) - set(model._fields)
-    if len(rogues_found) > 0:
-        for field_name in rogues_found:
-            errors[field_name] = [u'%s is an illegal field.' % field_name]
+    for field_name, serializable in instance._serializables.iteritems():
+        serialized_field_name = serializable.serialized_name or field_name
+        if serializable.fset and serialized_field_name in raw_data:
+            value = raw_data[serialized_field_name]
+            try:
+                value = serializable.type(value)
+                if field_name in instance._validator_functions:
+                    context = dict(instance._data, **raw_data)
+                    instance._validator_functions[field_name](instance, context, value)
+                setattr(instance, field_name, value)
+            except BaseError as e:
+                errors[serialized_field_name] = e.messages
     return errors
