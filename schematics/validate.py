@@ -51,7 +51,7 @@ def validate(model, raw_data, partial=False, strict=False, context=None):
         else:
             try:
                 value = field.convert(value)
-                field.validate(value)
+                field.validate(value, data.get(field_name))
                 data[field_name] = value
             except BaseError as e:
                 errors[serialized_field_name] = e.messages

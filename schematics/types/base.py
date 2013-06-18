@@ -140,7 +140,7 @@ class BaseType(object):
         """
         return value
 
-    def validate(self, value):
+    def validate(self, value, old_value=None):
         """
         Validate the field and return a clean value or raise a
         ``ValidationError`` with a list of errors raised by the validation
@@ -153,7 +153,7 @@ class BaseType(object):
 
         for validator in self.validators:
             try:
-                validator(value)
+                validator(value, old_value)
             except ValidationError, e:
                 errors.extend(e.messages)
 
@@ -163,11 +163,11 @@ class BaseType(object):
         if errors:
             raise ValidationError(errors)
 
-    def validate_required(self, value):
+    def validate_required(self, value, *args):
         if self.required and value is None:
             raise ValidationError(self.messages['required'])
 
-    def validate_choices(self, value):
+    def validate_choices(self, value, *args):
         if self.choices is not None:
             if value not in self.choices:
                 raise ValidationError(self.messages['choices']
@@ -207,7 +207,7 @@ class IPv4Type(BaseType):
         except ValueError:
             return False
 
-    def validate(self, value):
+    def validate(self, value, *args):
         """
           Make sure the value is a IPv4 address:
           http://stackoverflow.com/questions/9948833/validate-ip-address-from-list
@@ -264,7 +264,7 @@ class StringType(BaseType):
 
         return value
 
-    def validate_length(self, value):
+    def validate_length(self, value, *args):
         len_of_value = len(value) if value else 0
 
         if self.max_length is not None and len_of_value > self.max_length:
@@ -273,7 +273,7 @@ class StringType(BaseType):
         if self.min_length is not None and len_of_value < self.min_length:
             raise ValidationError(self.messages['min_length'])
 
-    def validate_regex(self, value):
+    def validate_regex(self, value, *args):
         if self.regex is not None and self.regex.match(value) is None:
             raise ValidationError(self.messages['regex'])
 
@@ -303,7 +303,7 @@ class URLType(StringType):
         self.verify_exists = verify_exists
         super(URLType, self).__init__(**kwargs)
 
-    def validate_url(self, value):
+    def validate_url(self, value, *args):
         if not URLType.URL_REGEX.match(value):
             raise StopValidation(self.messages['invalid_url'])
         if self.verify_exists:
@@ -334,7 +334,7 @@ class EmailType(StringType):
         re.IGNORECASE
     )
 
-    def validate_email(self, value):
+    def validate_email(self, value, *args):
         if not EmailType.EMAIL_REGEX.match(value):
             raise StopValidation(self.messages['email'])
 
@@ -432,7 +432,7 @@ class DecimalType(BaseType):
 
         return value
 
-    def validate_range(self, value):
+    def validate_range(self, value, *args):
         if self.min_value is not None and value < self.min_value:
             raise ValidationError(self.messages['number_min']
                 .format(self.number_type, self.min_value))
