@@ -1,0 +1,141 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: schematics\n"
+"POT-Creation-Date: 2013-07-23 16:20-0300\n"
+"PO-Revision-Date: 2013-07-23 16:21-0300\n"
+"Last-Translator: Matheus Bratfisch <matheusbrat@gmail.com>\n"
+"Language-Team: \n"
+"Language: python\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.5.7\n"
+"X-Poedit-KeywordsList: _;gettext;gettext_noop\n"
+"X-Poedit-Basepath: .\n"
+"X-Poedit-SearchPath-0: /Users/matheus/Projects/utilitrack/external/"
+"schematics\n"
+
+#: /Users/matheus/Projects/utilitrack/external/schematics/schematics/models.py:284
+#, python-format
+msgid "%s is an illegal field."
+msgstr "%s é um campo inválido."
+
+#: /Users/matheus/Projects/utilitrack/external/schematics/schematics/types/base.py:81
+msgid "This field is required."
+msgstr "Este campo é obrigatório."
+
+#: /Users/matheus/Projects/utilitrack/external/schematics/schematics/types/base.py:82
+msgid "Value must be one of {}."
+msgstr "Valor deve ser um dos {}."
+
+#: /Users/matheus/Projects/utilitrack/external/schematics/schematics/types/base.py:215
+msgid "Illegal data value"
+msgstr "Valor para dados inválido"
+
+#: /Users/matheus/Projects/utilitrack/external/schematics/schematics/types/base.py:216
+msgid "String value is too long"
+msgstr "Valor do texto é muito grande"
+
+#: /Users/matheus/Projects/utilitrack/external/schematics/schematics/types/base.py:217
+msgid "String value is too short"
+msgstr "Valor do texto é muito pequeno"
+
+#: /Users/matheus/Projects/utilitrack/external/schematics/schematics/types/base.py:218
+msgid "String value did not match validation regex"
+msgstr "Valor do texto não corresponde com a expressão regular"
+
+#: /Users/matheus/Projects/utilitrack/external/schematics/schematics/types/base.py:287
+msgid "Not a well formed email address."
+msgstr "Endereço de e-mail inválido."
+
+#: /Users/matheus/Projects/utilitrack/external/schematics/schematics/types/base.py:312
+msgid "Not {}"
+msgstr "Não {}"
+
+#: /Users/matheus/Projects/utilitrack/external/schematics/schematics/types/base.py:313
+msgid "{} value should be greater than {}"
+msgstr "{} deve ser maior que {}"
+
+#: /Users/matheus/Projects/utilitrack/external/schematics/schematics/types/base.py:314
+msgid "{} value should be less than {}"
+msgstr "{} deve ser menor que {}"
+
+#: /Users/matheus/Projects/utilitrack/external/schematics/schematics/types/base.py:406
+msgid "Hash value is wrong length."
+msgstr "Hash tem o tamanho errado."
+
+#: /Users/matheus/Projects/utilitrack/external/schematics/schematics/types/base.py:407
+msgid "Hash value is not hexadecimal."
+msgstr "Hash não é hexadecimal."
+
+#: /Users/matheus/Projects/utilitrack/external/schematics/schematics/types/base.py:444
+msgid "Must be either true or false."
+msgstr "Deve ser 'true' ou 'falso'"
+
+#: /Users/matheus/Projects/utilitrack/external/schematics/schematics/types/base.py:467
+msgid "Could not parse {}. Should be ISO8601 (YYYY-MM-DD)."
+msgstr "Campo {} não está no formato ISO8601 (YYYY-MM-DD)."
+
+#: /Users/matheus/Projects/utilitrack/external/schematics/schematics/types/base.py:502
+msgid "Could not parse {}. Should be ISO8601."
+msgstr "Campo {} não está no formato ISO8601."
+
+#: /Users/matheus/Projects/utilitrack/external/schematics/schematics/types/compound.py:74
+#, fuzzy
+msgid "Please supply a clean model instance."
+msgstr "Por favor forneca uma instancia limpa de modelo."
+
+#: /Users/matheus/Projects/utilitrack/external/schematics/schematics/types/compound.py:80
+msgid "Please use a mapping for this field or {} instance instead of {}."
+msgstr "Por favor use um mapa para este campo ou {} instância ao invés de {}."
+
+#: /Users/matheus/Projects/utilitrack/external/schematics/schematics/types/compound.py:109
+#, fuzzy, python-format
+msgid "%s Model has no role \"%s\""
+msgstr "O modelo %s não possui o papel \"%s\""
+
+#: /Users/matheus/Projects/utilitrack/external/schematics/schematics/types/compound.py:183
+#, python-format
+msgid "Please provide at least %d item."
+msgstr "Por favor forneca no mínimo %d item."
+
+#: /Users/matheus/Projects/utilitrack/external/schematics/schematics/types/compound.py:184
+#, python-format
+msgid "Please provide at least %d items."
+msgstr "Por favor forneça no mínimo %d itens."
+
+#: /Users/matheus/Projects/utilitrack/external/schematics/schematics/types/compound.py:190
+#, python-format
+msgid "Please provide no more than %d item."
+msgstr "Por favor não forneça mais de %d item."
+
+#: /Users/matheus/Projects/utilitrack/external/schematics/schematics/types/compound.py:191
+#, python-format
+msgid "Please provide no more than %d items."
+msgstr "Por favor não forneça mais de %d itens."
+
+#: /Users/matheus/Projects/utilitrack/external/schematics/schematics/types/compound.py:254
+msgid "Only dictionaries may be used in a DictType"
+msgstr "Somente dicionários (dict) podem ser utilizados em um DictType"
+
+#~ msgid "Key %r not found in %r"
+#~ msgstr "Chave %r não encontrada em %r"
+
+#~ msgid "update expected at most 1 arguments, got %d"
+#~ msgstr "atualizar esperava no máximo 1 argumento, recebeu %d"
+
+#~ msgid "MultiValueDict.update() takes either a MultiValueDict or dictionary"
+#~ msgstr "MultiValueDict.update() recebe um MultiValueDict ou um dicionário"
+
+#~ msgid "expected at most one positional argument"
+#~ msgstr "esperado no máximo um argumento posicional"
+
+#~ msgid "can't set attribute"
+#~ msgstr "não pode definir o atributo"
+
+#~ msgid ""
+#~ "Using the datetime fields requires the dateutil library. You can obtain "
+#~ "dateutil from http://labix.org/python-dateutil"
+#~ msgstr ""
+#~ "Utilizar campos do tipo datetime necessitam da biblioteca dateutil. Você "
+#~ "pode obte-la em http://labix.org/python-dateutil"

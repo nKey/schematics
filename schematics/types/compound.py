@@ -3,6 +3,8 @@ import itertools
 from ..exceptions import ValidationError, StopValidation
 from .base import BaseType
 from .bind import _bind
+from ..localization import _
+
 
 
 class MultiType(BaseType):
@@ -69,13 +71,13 @@ class ModelType(MultiType):
 
         if isinstance(value, self.model_class):
             if value.errors:
-                raise ValidationError(u'Please supply a clean model instance.')
+                raise ValidationError(_(u'Please supply a clean model instance.'))
             else:
                 value.validate()
                 return value
 
         if not isinstance(value, dict):
-            raise ValidationError(u'Please use a mapping for this field or {} instance instead of {}.'.format(
+            raise ValidationError(_(u'Please use a mapping for this field or {} instance instead of {}.').format(
                 self.model_class.__name__,
                 type(value).__name__))
 
@@ -104,7 +106,7 @@ class ModelType(MultiType):
         if role in model_instance._options.roles:
             gottago = model_instance._options.roles[role]
         elif role and raise_error_on_role:
-            raise ValueError(u'%s Model has no role "%s"' % (
+            raise ValueError(_(u'%s Model has no role "%s"') % (
                 self.model_class.__name__, role))
 
         for field_name, field, value in model_instance.iter(include_serializables):
@@ -178,15 +180,15 @@ class ListType(MultiType):
 
         if self.min_size is not None and len(value) < self.min_size:
             message = ({
-                True: u'Please provide at least %d item.',
-                False: u'Please provide at least %d items.'}[self.min_size == 1]
+                True: _(u'Please provide at least %d item.'),
+                False: _(u'Please provide at least %d items.')}[self.min_size == 1]
             ) % self.min_size
             raise ValidationError(message)
 
         if self.max_size is not None and len(value) > self.max_size:
             message = ({
-                True: u'Please provide no more than %d item.',
-                False: u'Please provide no more than %d items.'}[self.max_size == 1]
+                True: _(u'Please provide no more than %d item.'),
+                False: _(u'Please provide no more than %d items.')}[self.max_size == 1]
             ) % self.max_size
             raise ValidationError(message)
 
@@ -249,7 +251,7 @@ class DictType(MultiType):
         value = value or {}
 
         if not isinstance(value, dict):
-            raise ValidationError(u'Only dictionaries may be used in a DictType')
+            raise ValidationError(_(u'Only dictionaries may be used in a DictType'))
 
         return dict((self.coerce_key(k), self.field(v))
                     for k, v in value.iteritems())

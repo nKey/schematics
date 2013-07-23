@@ -9,7 +9,7 @@ from .types.serializable import Serializable
 from .exceptions import ValidationError
 from .serialize import serialize, flatten, expand
 from .datastructures import OrderedDict
-
+from .localization import _
 
 class FieldDescriptor(object):
 
@@ -281,7 +281,7 @@ class Model(object):
             rogues_found = set(data) - set(self._fields)
             if len(rogues_found) > 0:
                 for field_name in rogues_found:
-                    errors[field_name] = [u'%s is an illegal field.' % field_name]
+                    errors[field_name] = [_(u'%s is an illegal field.') % field_name]
 
         # Set internal data and touch the TypeDescriptors by setattr
         rollback = self._data.copy()

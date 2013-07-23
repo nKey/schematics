@@ -5,7 +5,7 @@ import decimal
 import itertools
 
 from ..exceptions import StopValidation, ValidationError
-
+from ..localization import _
 
 def force_unicode(obj, encoding='utf-8'):
     if isinstance(obj, basestring):
@@ -78,8 +78,8 @@ class BaseType(object):
     __metaclass__ = TypeMeta
 
     MESSAGES = {
-        'required': u"This field is required.",
-        'choices': u"Value must be one of {}.",
+        'required': _(u"This field is required."),
+        'choices': _(u"Value must be one of {}."),
     }
 
     def __init__(self, required=False, default=None, serialized_name=None,
@@ -212,10 +212,10 @@ class StringType(BaseType):
     allow_casts = (int, str)
 
     MESSAGES = {
-        'convert': u"Illegal data value",
-        'max_length': u"String value is too long",
-        'min_length': u"String value is too short",
-        'regex': u"String value did not match validation regex",
+        'convert': _(u"Illegal data value"),
+        'max_length': _(u"String value is too long"),
+        'min_length': _(u"String value is too short"),
+        'regex': _(u"String value did not match validation regex"),
     }
 
     def __init__(self, regex=None, max_length=None, min_length=1, **kwargs):
@@ -284,7 +284,7 @@ class EmailType(StringType):
     """
 
     MESSAGES = {
-        'email': u"Not a well formed email address."
+        'email': _(u"Not a well formed email address.")
     }
 
     EMAIL_REGEX = re.compile(
@@ -309,9 +309,9 @@ class NumberType(BaseType):
     """
 
     MESSAGES = {
-        'number_coerce': u"Not {}",
-        'number_min': u"{} value should be greater than {}",
-        'number_max': u"{} value should be less than {}",
+        'number_coerce': _(u"Not {}"),
+        'number_min': _(u"{} value should be greater than {}"),
+        'number_max': _(u"{} value should be less than {}"),
     }
 
     def __init__(self, number_class, number_type,
@@ -403,8 +403,8 @@ class DecimalType(BaseType):
 class HashType(BaseType):
 
     MESSAGES = {
-        'hash_length': u"Hash value is wrong length.",
-        'hash_hex': u"Hash value is not hexadecimal.",
+        'hash_length': _(u"Hash value is wrong length."),
+        'hash_hex': _(u"Hash value is not hexadecimal."),
     }
 
     def convert(self, value):
@@ -441,7 +441,7 @@ class BooleanType(BaseType):
     """
 
     MESSAGES = {
-        'bool': u"Must be either true or false.",
+        'bool': _(u"Must be either true or false."),
     }
 
     TRUE_VALUES = ('True', 'true', '1')
@@ -464,7 +464,7 @@ class DateType(BaseType):
 
     SERIALIZED_FORMAT = '%Y-%m-%d'
     MESSAGES = {
-        'parse': u'Could not parse {}. Should be ISO8601 (YYYY-MM-DD).',
+        'parse': _(u'Could not parse {}. Should be ISO8601 (YYYY-MM-DD).'),
     }
 
     def __init__(self, **kwargs):
@@ -499,7 +499,7 @@ class DateTimeType(BaseType):
     SERIALIZED_FORMAT = '%Y-%m-%dT%H:%M:%S.%f'
 
     MESSAGES = {
-        'parse': u'Could not parse {}. Should be ISO8601.',
+        'parse': _(u'Could not parse {}. Should be ISO8601.'),
     }
 
     def __init__(self, formats=None, serialized_format=None, **kwargs):
