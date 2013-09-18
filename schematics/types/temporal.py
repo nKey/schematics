@@ -11,13 +11,17 @@ except ImportError:
         'You can obtain dateutil from http://labix.org/python-dateutil'
     )
 
-from .base import DateTimeType
+from .base import DateTimeType, ConversionError
 
 
 class TimeStampType(DateTimeType):
     """Variant of a datetime field that saves itself as a unix timestamp (int)
     instead of a ISO-8601 string.
     """
+
+    MESSAGES = {
+        'negative': u'Timestamp cannot be negative.',
+    }
 
     def convert(self, value):
         """Will try to parse the value as a timestamp.  If that fails it
@@ -30,7 +34,11 @@ class TimeStampType(DateTimeType):
 
         try:
             value = float(value)
+            if value < 0:
+                raise ConversionError(self.messages['negative'])
             return TimeStampType.timestamp_to_date(value)
+        except ConversionError as e:
+            raise e
         except (TypeError, ValueError):
             pass
 
