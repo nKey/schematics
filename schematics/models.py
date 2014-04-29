@@ -160,6 +160,10 @@ class Model(object):
     __optionsclass__ = ModelOptions
 
     @classmethod
+    def get_role(cls, role_name):
+        return cls._options.roles.get(role_name)
+
+    @classmethod
     def from_flat(cls, data):
         return cls(expand(data))
 
