@@ -307,15 +307,26 @@ class Model(object):
                 raise KeyError(name)
 
     def __setitem__(self, name, value):
-        # Ensure that the field exists before setting its value
-        if not self.__contains__(name):
-            raise KeyError(name)
-        field = self._fields[name]
-        # TODO: read Options class for strict type checking flag
-        #self._raw_data[name] = field(value)
-        if not isinstance(value, Model) and isinstance(field, ModelType):
-            value = field.model_class(value)
-        self._raw_data[name] = value
+        try:
+            field = self._fields[name]
+        except KeyError:
+            # field not found, keep looking
+            pass
+        else:
+            # field was found, set value in data dict and quit
+            if not isinstance(value, Model) and isinstance(field, ModelType):
+                value = field.model_class(value)
+            # TODO: read Options class for strict type checking flag
+            #self._raw_data[name] = field(value)
+            self._raw_data[name] = value
+            return
+        # check serializables
+        try:
+            field = self._serializables[name]
+        except KeyError:
+            KeyError(name)
+        # use the serializable setter instead of storing value in data dict
+        setattr(self, name, value)
 
     def __contains__(self, name):
         return name in self._fields or name in self._serializables
