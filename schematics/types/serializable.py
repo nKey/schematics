@@ -50,7 +50,7 @@ class Serializable(object):
         self.serialize_when_none = serialize_when_none
 
     def __get__(self, obj, owner):
-        return self.f(obj)
+        return self.f(obj if obj is not None else owner)
 
     def __set__(self, obj, value):
         if self.fset is None:
