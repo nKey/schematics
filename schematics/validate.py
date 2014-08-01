@@ -2,6 +2,7 @@
 from .exceptions import BaseError, ValidationError
 
 
+
 def validate(model, raw_data, partial=False, strict=False, context=None):
     """
     Validate some untrusted data using a model. Trusted data can be passed in
@@ -25,6 +26,8 @@ def validate(model, raw_data, partial=False, strict=False, context=None):
         data dict contains the valid raw_data plus the context data.
         errors dict contains all ValidationErrors found.
     """
+    language = (model._language if hasattr(model, '_language') else 'en-US')
+
     data = dict(context) if context is not None else {}
     errors = {}
 
@@ -47,11 +50,11 @@ def validate(model, raw_data, partial=False, strict=False, context=None):
 
         if value is None:
             if field.required and not partial:
-                errors[serialized_field_name] = [field.messages['required'], ]
+                errors[serialized_field_name] = [field.messages['required'](language), ]
         else:
             try:
-                value = field.convert(value)
-                field.validate(value, data.get(field_name))
+                value = field.convert(value, language)
+                field.validate(value, old_value=data.get(field_name), language=language)
                 data[field_name] = value
             except BaseError as e:
                 errors[serialized_field_name] = e.messages

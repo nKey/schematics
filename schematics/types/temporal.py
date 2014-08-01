@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 import datetime
 from time import mktime
+from ..localization import translate_partial as _
 
 try:
     from dateutil.tz import tzutc, tzlocal
@@ -20,10 +21,10 @@ class TimeStampType(DateTimeType):
     """
 
     MESSAGES = {
-        'negative': u'Timestamp cannot be negative.',
+        'negative': _(u'Timestamp cannot be negative.'),
     }
 
-    def convert(self, value):
+    def convert(self, value, language=None):
         """Will try to parse the value as a timestamp.  If that fails it
         will fallback to DateTimeType's value parsing.
 
@@ -35,7 +36,7 @@ class TimeStampType(DateTimeType):
         try:
             value = float(value)
             if value < 0:
-                raise ConversionError(self.messages['negative'])
+                raise ConversionError(self.messages['negative'](language))
             return TimeStampType.timestamp_to_date(value)
         except ConversionError as e:
             raise e

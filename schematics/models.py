@@ -158,6 +158,7 @@ class Model(object):
 
     __metaclass__ = ModelMeta
     __optionsclass__ = ModelOptions
+    _language = None
 
     @classmethod
     def get_role(cls, role_name):
@@ -167,9 +168,10 @@ class Model(object):
     def from_flat(cls, data):
         return cls(expand(data))
 
-    def __init__(self, raw_data=None):
+    def __init__(self, raw_data=None, language=None):
         self._raw_data = {}
         self._data = {}
+        self._language = language if language else self._language
         if raw_data:
             converted = self.convert(raw_data)
             self._raw_data = dict(raw_data, **converted)
@@ -229,7 +231,7 @@ class Model(object):
         """
         return flatten(self, role, prefix=prefix)
 
-    def convert(self, raw_data):
+    def convert(self, raw_data, language=None):
         """
         Converts the raw data into richer Python constructs according to the
         fields on the model

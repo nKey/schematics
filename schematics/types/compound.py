@@ -4,11 +4,12 @@
 from __future__ import division
 from ..exceptions import ValidationError, ConversionError, ModelValidationError, StopValidation
 from .base import BaseType
+from ..localization import translate_partial as _
 
 
 class MultiType(BaseType):
 
-    def validate(self, value, old_value=None):
+    def validate(self, value, old_value=None, language=None):
         """Report dictionary of errors with lists of errors as values of each
         key. Used by ModelType and ListType.
 
@@ -17,7 +18,7 @@ class MultiType(BaseType):
 
         for validator in self.validators:
             try:
-                validator(value, old_value)
+                validator(value, old_value, language)
             except ModelValidationError, e:
                 errors.update(e.messages)
 
@@ -40,7 +41,7 @@ class ModelType(MultiType):
 
         validators = kwargs.pop("validators", [])
 
-        def validate_model(model_instance, *args):
+        def validate_model(model_instance, language=None, *args):
             model_instance.validate()
             return model_instance
 
@@ -49,7 +50,7 @@ class ModelType(MultiType):
     def __repr__(self):
         return object.__repr__(self)[:-1] + ' for %s>' % self.model_class
 
-    def convert(self, value):
+    def convert(self, value, language=None):
         if value is None:  # We have already checked if the field is required. If it is None it should continue being None
             return None
 
@@ -57,7 +58,7 @@ class ModelType(MultiType):
             return value
 
         if not isinstance(value, dict):
-            raise ConversionError(u'Please use a mapping for this field or {} instance instead of {}.'.format(
+            raise ConversionError(_(u'Please use a mapping for this field or {} instance instead of {}.')(language).format(
                 self.model_class.__name__,
                 type(value).__name__))
 
@@ -151,7 +152,7 @@ class ListType(MultiType):
         except TypeError:
             return [value]
 
-    def convert(self, value):
+    def convert(self, value, language=None):
         items = self._force_list(value)
 
         return map(self.field.convert, items)
@@ -173,11 +174,11 @@ class ListType(MultiType):
             ) % self.max_size
             raise ValidationError(message)
 
-    def validate_items(self, items, *args):
+    def validate_items(self, items, old_value=None, language=None, *args):
         errors = []
         for idx, item in enumerate(items, 1):
             try:
-                self.field.validate(item)
+                self.field.validate(item, old_value=old_value, language=language)
             except ValidationError, e:
                 errors.append(e.message)
 
@@ -218,23 +219,23 @@ class DictType(MultiType):
     def model_class(self):
         return self.field.model_class
 
-    def convert(self, value, safe=False):
+    def convert(self, value, old_value=None, language=None, safe=False):
         if value == EMPTY_DICT:
             value = {}
 
         value = value or {}
 
-        if not isinstance(value, dict):
-            raise ValidationError(u'Only dictionaries may be used in a DictType')
+        if not isinstance(value, dict, old_value=None, language=None):
+            raise ValidationError(_(u'Only dictionaries may be used in a DictType')(language))
 
         return dict((self.coerce_key(k), self.field.convert(v))
                     for k, v in value.iteritems())
 
-    def validate_items(self, items, *args):
+    def validate_items(self, items, old_value=None, language=None):
         errors = {}
         for key, value in items.iteritems():
             try:
-                self.field.validate(value)
+                self.field.validate(value, language)
             except ValidationError, e:
                 errors[key] = e
 

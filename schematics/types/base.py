@@ -6,6 +6,7 @@ import itertools
 import functools
 
 from ..exceptions import StopValidation, ValidationError, ConversionError
+from ..localization import translate_partial as _
 
 
 def force_unicode(obj, encoding='utf-8'):
@@ -93,8 +94,8 @@ class BaseType(object):
     __metaclass__ = TypeMeta
 
     MESSAGES = {
-        'required': u"This field is required.",
-        'choices': u"Value must be one of {}.",
+        'required': _(u"This field is required."),
+        'choices': _(u"Value must be one of {}."),
     }
 
     def __init__(self, required=False, default=None, serialized_name=None,
@@ -134,13 +135,13 @@ class BaseType(object):
         """
         return value
 
-    def convert(self, value):
+    def convert(self, value, language=None):
         """
         Convert untrusted data to a richer Python construct.
         """
         return value
 
-    def validate(self, value, old_value=None):
+    def validate(self, value, old_value=None, language=None):
         """
         Validate the field and return a clean value or raise a
         ``ValidationError`` with a list of errors raised by the validation
@@ -153,7 +154,7 @@ class BaseType(object):
 
         for validator in self.validators:
             try:
-                validator(value, old_value)
+                validator(value, old_value=old_value, language=language)
             except ValidationError, e:
                 errors.extend(e.messages)
 
@@ -163,14 +164,14 @@ class BaseType(object):
         if errors:
             raise ValidationError(errors)
 
-    def validate_required(self, value, *args):
+    def validate_required(self, value, old_value=None, language=None):
         if self.required and value is None:
-            raise ValidationError(self.messages['required'])
+            raise ValidationError(self.messages['required'](language))
 
-    def validate_choices(self, value, *args):
+    def validate_choices(self, value, old_value=None, language=None):
         if self.choices is not None:
             if value not in self.choices:
-                raise ValidationError(self.messages['choices']
+                raise ValidationError(self.messages['choices'](language)
                     .format(unicode(self.choices)))
 
 
@@ -178,7 +179,7 @@ class UUIDType(BaseType):
     """A field that stores a valid UUID value.
     """
 
-    def convert(self, value):
+    def convert(self, value, language=None):
         if not isinstance(value, uuid.UUID):
             value = uuid.UUID(value)
         return value
@@ -207,13 +208,13 @@ class IPv4Type(BaseType):
         except ValueError:
             return False
 
-    def validate(self, value, *args):
+    def validate(self, value, old_value=None, language=None):
         """
           Make sure the value is a IPv4 address:
           http://stackoverflow.com/questions/9948833/validate-ip-address-from-list
         """
         if not IPv4Type.valid_ip(value):
-            error_msg = 'Invalid IPv4 address'
+            error_msg = _(u'Invalid IPv4 address')(language)
             raise ValidationError(error_msg)
         return True
 
@@ -237,10 +238,10 @@ class StringType(BaseType):
     allow_casts = (int, str)
 
     MESSAGES = {
-        'convert': u"Couldn't interpret value as string.",
-        'max_length': u"String value is too long.",
-        'min_length': u"String value is too short.",
-        'regex': u"String value did not match validation regex.",
+        'convert': _(u"Couldn't interpret value as string."),
+        'max_length': _(u"String value is too long."),
+        'min_length': _(u"String value is too short."),
+        'regex': _(u"String value did not match validation regex."),
     }
 
     def __init__(self, regex=None, max_length=None, min_length=None, **kwargs):
@@ -250,7 +251,7 @@ class StringType(BaseType):
 
         super(StringType, self).__init__(**kwargs)
 
-    def convert(self, value):
+    def convert(self, value, language=None):
         if value is None:
             return None
 
@@ -260,22 +261,22 @@ class StringType(BaseType):
                     value = str(value)
                 value = unicode(value, 'utf-8')
             else:
-                raise ConversionError(self.messages['convert'])
+                raise ConversionError(self.messages['convert'](language))
 
         return value
 
-    def validate_length(self, value, *args):
+    def validate_length(self, value, old_value=None, language=None):
         len_of_value = len(value) if value else 0
 
         if self.max_length is not None and len_of_value > self.max_length:
-            raise ValidationError(self.messages['max_length'])
+            raise ValidationError(self.messages['max_length'](language))
 
         if self.min_length is not None and len_of_value < self.min_length:
-            raise ValidationError(self.messages['min_length'])
+            raise ValidationError(self.messages['min_length'](language))
 
-    def validate_regex(self, value, *args):
+    def validate_regex(self, value, old_value=None, language=None):
         if self.regex is not None and self.regex.match(value) is None:
-            raise ValidationError(self.messages['regex'])
+            raise ValidationError(self.messages['regex'](language))
 
 
 class URLType(StringType):
@@ -286,8 +287,8 @@ class URLType(StringType):
     """
 
     MESSAGES = {
-        'invalid_url': u"Not a well formed URL.",
-        'not_found': u"URL does not exist.",
+        'invalid_url': _(u"Not a well formed URL."),
+        'not_found': _(u"URL does not exist."),
     }
 
     URL_REGEX = re.compile(
@@ -303,16 +304,16 @@ class URLType(StringType):
         self.verify_exists = verify_exists
         super(URLType, self).__init__(**kwargs)
 
-    def validate_url(self, value, *args):
+    def validate_url(self, value, old_value=None, language=None):
         if not URLType.URL_REGEX.match(value):
-            raise StopValidation(self.messages['invalid_url'])
+            raise StopValidation(self.messages['invalid_url'](language))
         if self.verify_exists:
             import urllib2
             try:
                 request = urllib2.Request(value)
                 urllib2.urlopen(request)
             except Exception:
-                raise StopValidation(self.messages['not_found'])
+                raise StopValidation(self.messages['not_found'](language))
 
 
 class EmailType(StringType):
@@ -320,7 +321,7 @@ class EmailType(StringType):
     """
 
     MESSAGES = {
-        'email': u"Not a well formed email address."
+        'email': _(u"Not a well formed email address.")
     }
 
     EMAIL_REGEX = re.compile(
@@ -334,9 +335,9 @@ class EmailType(StringType):
         re.IGNORECASE
     )
 
-    def validate_email(self, value, *args):
+    def validate_email(self, value, old_value=None, language=None):
         if not EmailType.EMAIL_REGEX.match(value):
-            raise StopValidation(self.messages['email'])
+            raise StopValidation(self.messages['email'](language))
 
 
 class NumberType(BaseType):
@@ -344,9 +345,9 @@ class NumberType(BaseType):
     """
 
     MESSAGES = {
-        'number_coerce': u"Value is not {}",
-        'number_min': u"{} value should be greater than {}",
-        'number_max': u"{} value should be less than {}",
+        'number_coerce': _(u"Value is not {}"),
+        'number_min': _(u"{} value should be greater than {}"),
+        'number_max': _(u"{} value should be less than {}"),
     }
 
     def __init__(self, number_class, number_type,
@@ -358,22 +359,22 @@ class NumberType(BaseType):
 
         super(NumberType, self).__init__(**kwargs)
 
-    def convert(self, value):
+    def convert(self, value, language=None):
         try:
             value = self.number_class(value)
         except (TypeError, ValueError):
-            raise ConversionError(self.messages['number_coerce']
+            raise ConversionError(self.messages['number_coerce'](language)
                 .format(self.number_type.lower()))
 
         return value
 
     def check_value(self, value):
         if self.min_value is not None and value < self.min_value:
-            raise ValidationError(self.messages['number_min']
+            raise ValidationError(self.messages['number_min'](language)
                 .format(self.number_type, self.min_value))
 
         if self.max_value is not None and value > self.max_value:
-            raise ValidationError(self.messages['number_max']
+            raise ValidationError(self.messages['number_max'](language)
                 .format(self.number_type, self.max_value))
 
         return value
@@ -419,7 +420,7 @@ class DecimalType(BaseType):
     def to_primitive(self, value):
         return unicode(value)
 
-    def convert(self, value):
+    def convert(self, value, language=None):
         if not isinstance(value, decimal.Decimal):
             if not isinstance(value, basestring):
                 value = unicode(value)
@@ -427,18 +428,18 @@ class DecimalType(BaseType):
                 value = decimal.Decimal(value)
 
             except (TypeError, decimal.InvalidOperation):
-                raise ConversionError(self.messages['number_coerce']
+                raise ConversionError(self.messages['number_coerce'](language)
                     .format(self.number_type))
 
         return value
 
-    def validate_range(self, value, *args):
+    def validate_range(self, value, old_value=None, language=None):
         if self.min_value is not None and value < self.min_value:
-            raise ValidationError(self.messages['number_min']
+            raise ValidationError(self.messages['number_min'](language)
                 .format(self.number_type, self.min_value))
 
         if self.max_value is not None and value > self.max_value:
-            raise ValidationError(self.messages['number_max']
+            raise ValidationError(self.messages['number_max'](language)
                 .format(self.number_type, self.max_value))
 
         return value
@@ -447,17 +448,17 @@ class DecimalType(BaseType):
 class HashType(BaseType):
 
     MESSAGES = {
-        'hash_length': u"Hash value is wrong length.",
-        'hash_hex': u"Hash value is not hexadecimal.",
+        'hash_length': _(u"Hash value is wrong length."),
+        'hash_hex': _(u"Hash value is not hexadecimal."),
     }
 
-    def convert(self, value):
+    def convert(self, value, language=None):
         if len(value) != self.LENGTH:
-            raise ValidationError(self.messages['hash_length'])
+            raise ValidationError(self.messages['hash_length'](language))
         try:
             value = int(value, 16)
         except ValueError:
-            raise ConversionError(self.messages['hash_hex'])
+            raise ConversionError(self.messages['hash_hex'](language))
         return value
 
 
@@ -487,7 +488,7 @@ class BooleanType(BaseType):
     TRUE_VALUES = ('True', 'true', '1')
     FALSE_VALUES = ('False', 'false', '0')
 
-    def convert(self, value):
+    def convert(self, value, language=None):
         if isinstance(value, basestring):
             if value in self.TRUE_VALUES:
                 value = True
@@ -495,7 +496,7 @@ class BooleanType(BaseType):
                 value = False
 
         if not isinstance(value, bool):
-            raise ConversionError(u'Must be either true or false.')
+            raise ConversionError(_(u'Must be either true or false.')(language))
 
         return value
 
@@ -506,21 +507,21 @@ class DateType(BaseType):
 
     SERIALIZED_FORMAT = '%Y-%m-%d'
     MESSAGES = {
-        'parse': u'Could not parse {}. Should be ISO8601 (YYYY-MM-DD).',
+        'parse': _(u'Could not parse {}. Should be ISO8601 (YYYY-MM-DD).'),
     }
 
     def __init__(self, **kwargs):
         self.serialized_format = self.SERIALIZED_FORMAT
         super(DateType, self).__init__(**kwargs)
 
-    def convert(self, value):
+    def convert(self, value, language=None):
         if isinstance(value, datetime.date):
             return value
 
         try:
             return datetime.datetime.strptime(value, self.serialized_format).date()
         except (ValueError, TypeError):
-            raise ConversionError(self.messages['parse'].format(value))
+            raise ConversionError(self.messages['parse'](language).format(value))
 
     def to_primitive(self, value):
         return value.strftime(self.serialized_format)
@@ -541,7 +542,7 @@ class DateTimeType(BaseType):
     SERIALIZED_FORMAT = '%Y-%m-%dT%H:%M:%S.%f'
 
     MESSAGES = {
-        'parse': u'Could not parse {}. Should be ISO8601.',
+        'parse': _(u'Could not parse {}. Should be ISO8601.'),
     }
 
     def __init__(self, formats=None, serialized_format=None, **kwargs):
@@ -558,7 +559,7 @@ class DateTimeType(BaseType):
         self.serialized_format = serialized_format
         super(DateTimeType, self).__init__(**kwargs)
 
-    def convert(self, value):
+    def convert(self, value, language=None):
         if isinstance(value, datetime.datetime):
             return value
 
@@ -567,7 +568,7 @@ class DateTimeType(BaseType):
                 return datetime.datetime.strptime(value, format)
             except (ValueError, TypeError):
                 continue
-        raise ConversionError(self.messages['parse'].format(value))
+        raise ConversionError(self.messages['parse'](language).format(value))
 
     def to_primitive(self, value):
         if callable(self.serialized_format):
@@ -579,7 +580,12 @@ class GeoPointType(BaseType):
     """A list storing a latitude and longitude.
     """
 
-    def convert(self, value):
+    MESSAGES = {
+        'invalid_point_value': _('Both values in point must be float or int'),
+        'invalid_value': _('GeoPointType can only accept tuples, lists, or dicts'),
+    }
+
+    def convert(self, value, language=None):
         """Make sure that a geo-value is of type (x, y)
         """
         if not len(value) == 2:
@@ -587,12 +593,12 @@ class GeoPointType(BaseType):
         if isinstance(value, dict):
             for v in value.values():
                 if not isinstance(v, (float, int)):
-                    raise ValueError('Both values in point must be float or int')
+                    raise ValueError(_('Both values in point must be float or int')(language))
         elif isinstance(value, (list, tuple)):
             if (not isinstance(value[0], (float, int)) or
                     not isinstance(value[1], (float, int))):
-                raise ValueError('Both values in point must be float or int')
+                raise ValueError(self.messages['invalid_point_value'](language))
         else:
-            raise ValueError('GeoPointType can only accept tuples, lists, or dicts')
+            raise ValueError(self.messages['invalid_value'](language))
 
         return value
