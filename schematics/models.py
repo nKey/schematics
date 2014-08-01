@@ -304,6 +304,10 @@ class Model(object):
             try:
                 return getattr(self, name)
             except AttributeError:
+                if name in self._serializables:
+                    import sys
+                    exc_type, exc_value, exc_traceback = sys.exc_info()
+                    raise KeyError, '%s - %s' % (name, exc_value.message), exc_traceback
                 raise KeyError(name)
 
     def __setitem__(self, name, value):
