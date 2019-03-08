@@ -110,17 +110,27 @@ def blacklist(*field_list):
 ### Serialization
 ###
 
-def atoms(cls, instance_or_dict, include_serializables=True):
+
+def filter_roles_instance(fields, roles):
+    "Skipping field not requested"
+    if roles:
+        return [i for i in fields.iteritems() if i[0] in roles.fields]
+    else:
+        return fields.iteritems()
+
+
+def atoms(cls, instance_or_dict, include_serializables=True, roles=None):
     """
     Iterator for the atomic components of a model definition and relevant data
     that creates a threeple of the field's name, the instance of it's type, and
     it's value.
     """
     if include_serializables:
-        all_fields = itertools.chain(cls._fields.iteritems(),
-                                     cls._serializables.iteritems())
+        all_fields = itertools.chain(filter_roles_instance(cls._fields, roles),
+                                     filter_roles_instance(
+                                         cls._serializables, roles))
     else:
-        all_fields = cls._fields.iteritems()
+        all_fields = filter_roles_instance(cls._fields, roles)
 
     return ((field_name, field, instance_or_dict[field_name])
             for field_name, field in all_fields)
@@ -158,16 +168,12 @@ def apply_shape(cls, instance_or_dict, role, field_converter, model_converter,
         raise ValueError(error_msg % (cls, role))
 
     ### Transformation loop
-    attr_gen = atoms(cls, instance_or_dict, include_serializables)
+    attr_gen = atoms(cls, instance_or_dict, include_serializables, gottago)
     for field_name, field, value in attr_gen:
         serialized_name = field.serialized_name or field_name
 
-        ### Skipping this field was requested
-        if gottago(field_name, value):
-            continue
-
         ### Value found, convert and store it.
-        elif value is not None:
+        if value is not None:
             if isinstance(field, MultiType):
                 if isinstance(field, ModelType):
                     primitive_value = model_converter(field, value)
